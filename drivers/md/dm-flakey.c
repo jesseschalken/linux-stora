@@ -323,7 +323,7 @@ static int flakey_end_io(struct dm_target *ti, struct bio *bio,
 	 * Corrupt successful READs while in down state.
 	 * If flags were specified, only corrupt those that match.
 	 */
-	if (!error && bio_submitted_while_down &&
+	if (fc->corrupt_bio_byte && !error && bio_submitted_while_down &&
 	    (bio_data_dir(bio) == READ) && (fc->corrupt_bio_rw == READ) &&
 	    all_corrupt_bio_flags_match(bio, fc))
 		corrupt_bio_data(bio, fc);
@@ -331,8 +331,8 @@ static int flakey_end_io(struct dm_target *ti, struct bio *bio,
 	return error;
 }
 
-static int flakey_status(struct dm_target *ti, status_type_t type,
-			 char *result, unsigned int maxlen)
+static void flakey_status(struct dm_target *ti, status_type_t type,
+			  char *result, unsigned maxlen)
 {
 	unsigned sz = 0;
 	struct flakey_c *fc = ti->private;
@@ -362,7 +362,6 @@ static int flakey_status(struct dm_target *ti, status_type_t type,
 
 		break;
 	}
-	return 0;
 }
 
 static int flakey_ioctl(struct dm_target *ti, unsigned int cmd, unsigned long arg)
@@ -405,7 +404,7 @@ static int flakey_iterate_devices(struct dm_target *ti, iterate_devices_callout_
 
 static struct target_type flakey_target = {
 	.name   = "flakey",
-	.version = {1, 2, 0},
+	.version = {1, 2, 1},
 	.module = THIS_MODULE,
 	.ctr    = flakey_ctr,
 	.dtr    = flakey_dtr,
